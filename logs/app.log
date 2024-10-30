@@ -1,0 +1,5 @@
+2024-10-30 08:44:36,853 - ERROR - Class file not found. Please check the path.
+2024-10-30 08:45:11,411 - ERROR - Class file not found. Please check the path.
+2024-10-30 08:49:38,074 - INFO - Attempting to load class file from C:/Users/quran/PycharmProjects/video_processing_project/model/synset_words.txt
+2024-10-30 08:49:38,075 - INFO - Classes loaded successfully.
+2024-10-30 08:49:38,221 - INFO - Model loaded successfully.

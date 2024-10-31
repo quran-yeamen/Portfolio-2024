@@ -4,6 +4,7 @@ import time
 import numpy as np
 import logging
 from utils import preprocess_frame
+from tqdm import tqdm
 
 
 def make_predictions(net, classes, frame, confidence_threshold=0.5):
@@ -21,30 +22,50 @@ def make_predictions(net, classes, frame, confidence_threshold=0.5):
 
 
 def process_video(video_path, net, classes, settings):
-    """Processes a video file, applying the model on every 5th frame for efficiency."""
+    """Processes a video file, applying the model on every Nth frame for efficiency, with progress indication."""
     process_every_n_frames = settings.get("process_every_n_frames", 5)
     confidence_threshold = settings.get("confidence_threshold", 0.5)
+
+    # Desired window size
+    target_width = 740
+    target_height = 460
 
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         logging.error("Cannot open video stream")
         exit()
 
-    frame_count = 0
-    while True:
-        ret, frame = cap.read()
-        if not ret or frame is None:
-            break
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-        if frame_count % process_every_n_frames == 0:
-            make_predictions(net, classes, frame, confidence_threshold)
+    with tqdm(total=frame_count, desc="Processing video", unit="frame") as pbar:
+        frame_number = 0
+        while True:
+            ret, frame = cap.read()
+            if not ret or frame is None:
+                break
 
-        cv2.imshow('Processed Frame', frame)
-        frame_count += process_every_n_frames
-        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
+            # Only process every Nth frame
+            if frame_number % process_every_n_frames == 0:
+                make_predictions(net, classes, frame, confidence_threshold)
 
-        if cv2.waitKey(25) & 0xFF == 27:  # ESC key
-            break
+            # Resize the frame to the target size
+            resized_frame = cv2.resize(frame, (target_width, target_height))
 
+            # Create a named window and set it to resizable mode
+            cv2.namedWindow('Processed Frame', cv2.WINDOW_NORMAL)
+            cv2.resizeWindow('Processed Frame', target_width, target_height)  # Force the window size
+
+            # Display the resized frame with predictions
+            cv2.imshow('Processed Frame', resized_frame)
+
+            # Update progress bar
+            pbar.update(1)
+            frame_number += 1
+
+            # Break on 'ESC' key
+            if cv2.waitKey(25) & 0xFF == 27:
+                break
+
+    # Release video capture and destroy windows
     cap.release()
     cv2.destroyAllWindows()

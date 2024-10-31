@@ -1,8 +1,12 @@
 # model_loader.py
 import logging
+from functools import lru_cache
+
 import cv2
 import os
 
+
+@lru_cache(maxsize=1)
 def load_classes(filepath):
     """Loads class labels from a specified file."""
     logging.info(f"Attempting to load class file from {filepath}")
